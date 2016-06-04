@@ -1,2 +1,2 @@
 # LWMediaEditor
-视频合成处理
+视频特效处理
