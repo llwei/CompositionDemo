@@ -21,17 +21,46 @@ class EditorViewController: UIViewController, UITableViewDataSource, UITableView
     private var player = LWVideoPlayer()
     
     private let mvTitles = ["无", "Smile", "Sakura"]
-    private let filterTitiles = ["filter1", "filter2", "filter3", "filter4", "filter5"]
-    private let musicTitles = ["Sunny Jim", "Two On A Bike", "Waldeck", "Whisting"]
+    private let filterTitiles = ["CIPhotoEffectChrome",
+                                 "CIPhotoEffectFade",
+                                 "CIPhotoEffectInstant",
+                                 "CIPhotoEffectMono",
+                                 "CIPhotoEffectNoir",
+                                 "CIPhotoEffectProcess",
+                                 "CIPhotoEffectTonal"]
+    private let musicTitles = ["Sunny Jim", "Two On A Bike", "Waldeck", "Whistling"]
     
     private var filterLayer: CALayer = CALayer()
     private var waterLayer: CALayer?
+    
+    private var filterIndex: Int = 0
     
     
     // MARK: - Life cycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let playerItem = AVPlayerItem(asset: fetchBaseComposeVideoAsset())
+        player.replaceCurrentItemWithPlayerItem(playerItem,
+                                                videoPlayerView: preview,
+                                                playRepeatCount: 100,
+                                                loadingFailedHandler: nil,
+                                                playbackHandler: nil)
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        player.play()
+    }
+    
+    override func viewDidDisappear(animated: Bool) {
+        super.viewDidDisappear(animated)
+        player.stop()
+    }
+    
+    deinit {
+        print("EditorViewController deinit")
     }
     
     
@@ -84,101 +113,137 @@ class EditorViewController: UIViewController, UITableViewDataSource, UITableView
     
     
     @IBAction func changeMusic(sender: UIButton) {
+        
+        let filter = CIFilter(name: filterTitiles[filterIndex])!
+        
+        let actionSheet = UIAlertController(title: nil, message: nil, preferredStyle: .ActionSheet)
+        for music in musicTitles {
+            let url = NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource(music, ofType: "mp3")!)
+            let action = UIAlertAction(title: music,
+                                       style: .Default,
+                                       handler: { (_) in
+                                        
+                                        let (composition, audioMix) = self.addAudioTrack(fromVideoAsset: self.fetchBaseComposeVideoAsset(), audioAsset: AVAsset(URL: url))
+                                        
+                                        let playerItem = AVPlayerItem(asset: composition)
+                                        playerItem.videoComposition = self.fetchFilterVideoComposition(filter, videoAsset: self.fetchBaseComposeVideoAsset())
+                                        playerItem.audioMix = audioMix
+                                        self.player.replaceCurrentItemWithPlayerItem(playerItem,
+                                            videoPlayerView: self.preview,
+                                            playRepeatCount: 100,
+                                            loadingFailedHandler: nil,
+                                            playbackHandler: nil)
+                                        
+                                        self.player.play()
+                                        
+            })
+            actionSheet.addAction(action)
+        }
+        
+        presentViewController(actionSheet, animated: true, completion: nil)
     }
     
     
     
     private func composeMV(index: Int) {
         player.stop()
-        waterLayer?.removeFromSuperlayer()
-        
         
         if index == 0 {
             // 无
-            filterLayer.removeFromSuperlayer()
-            let assets = MVFilter.fetchOriginalMovie()
-            let mix = LWMediaEditor.mergeMedias(withVideos: assets,
-                                                audioAssets: [],
-                                                renderSize: CGSize(width: 480, height: 480))
-            if let asset = mix.0 {
-                let playerItem = AVPlayerItem(asset: asset)
-                
-                player.replaceCurrentItemWithPlayerItem(playerItem,
-                                                        videoPlayerView: preview,
-                                                        playRepeatCount: 100,
-                                                        loadingFailedHandler: { (error) in
-                                                            print(error?.localizedDescription)
-                    }, playbackHandler: { (readyToPlay, current, loadedBuffer, totalBuffer, finished) in
-                        if readyToPlay {
-                            print(current)
-                        }
-                })
-            }
+            let playerItem = AVPlayerItem(asset: fetchBaseComposeVideoAsset())
+            player.replaceCurrentItemWithPlayerItem(playerItem,
+                                                    videoPlayerView: preview,
+                                                    playRepeatCount: 100,
+                                                    loadingFailedHandler: nil,
+                                                    playbackHandler: nil)
             
         } else if index == 1 {
             // Smile
-            let samile = Smile()
-            
-            if let asset = samile.composition {
-                let playerItem = AVPlayerItem(asset: asset)
-                if let videoComposition = samile.videoComposition {
-                    playerItem.videoComposition = videoComposition
-                }
-                
-                player.replaceCurrentItemWithPlayerItem(playerItem,
-                                                        videoPlayerView: preview,
-                                                        playRepeatCount: 100,
-                                                        loadingFailedHandler: { (error) in
-                                                            print(error?.localizedDescription)
-                    }, playbackHandler: { (readyToPlay, current, loadedBuffer, totalBuffer, finished) in
-                        if readyToPlay {
-                            print(current)
-                        }
-                })
-            }
-            
         } else if index == 2 {
             // Sakura
-            let sakura = Sakura()
-            
-            if let asset = sakura.composition {
-                let playerItem = AVPlayerItem(asset: asset)
-                if let videoComposition = sakura.videoComposition {
-                    playerItem.videoComposition = videoComposition
-                }
-                
-                player.replaceCurrentItemWithPlayerItem(playerItem,
-                                                        videoPlayerView: preview,
-                                                        playRepeatCount: 100,
-                                                        loadingFailedHandler: { (error) in
-                                                            print(error?.localizedDescription)
-                    }, playbackHandler: { (readyToPlay, current, loadedBuffer, totalBuffer, finished) in
-                        if readyToPlay {
-                            print(current)
-                        }
-                })
-            }
         }
-        
-        // 水印
-        let width = UIScreen.mainScreen().bounds.size.width
-        let overlayLayer = MVFilter.fetchOverlayLayer(CGSize(width: width, height: width))
-        preview.layer.addSublayer(overlayLayer)
-        waterLayer = overlayLayer
         
         player.play()
     }
     
     
     private func composeFilter(index: Int) {
+        player.stop()
         
-        filterLayer.contents = UIImage(named: filterTitiles[index] + ".png")?.CGImage
-        filterLayer.frame = preview.layer.bounds
-        preview.layer.addSublayer(filterLayer)
+        filterIndex = index
         
+        let filterName = filterTitiles[index]
+        
+        if let filter = CIFilter(name: filterName) {
+            let asset = fetchBaseComposeVideoAsset()
+            let videoComposition = fetchFilterVideoComposition(filter, videoAsset: asset)
+            
+            let playerItem = AVPlayerItem(asset: asset)
+            playerItem.videoComposition = videoComposition
+            
+            player.replaceCurrentItemWithPlayerItem(playerItem,
+                                                    videoPlayerView: preview,
+                                                    playRepeatCount: 100,
+                                                    loadingFailedHandler: nil,
+                                                    playbackHandler: nil)
+            player.play()
+        }
     }
     
     
+    
+    // MARK: - Helper methods
+    
+    // 根据video2 和 video4 拿到拼接合成后的静音视频资源
+    private func fetchBaseComposeVideoAsset() -> AVMutableComposition {
+        
+        let asset1 = AVAsset(URL: NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("video2", ofType: "mp4")!))
+        let asset2 = AVAsset(URL: NSURL(fileURLWithPath: NSBundle.mainBundle().pathForResource("video4", ofType: "mp4")!))
+        
+        let mixComposition = AVMutableComposition()
+        
+        let videoTrack = mixComposition.addMutableTrackWithMediaType(AVMediaTypeVideo,
+                                                                     preferredTrackID: kCMPersistentTrackID_Invalid)
+        try! videoTrack.insertTimeRange(CMTimeRangeMake(kCMTimeZero, asset1.duration),
+                                        ofTrack: asset1.tracksWithMediaType(AVMediaTypeVideo)[0],
+                                        atTime: kCMTimeZero)
+        try! videoTrack.insertTimeRange(CMTimeRangeMake(kCMTimeZero, asset2.duration),
+                                        ofTrack: asset2.tracksWithMediaType(AVMediaTypeVideo)[0],
+                                        atTime: asset1.duration)
+        
+        return mixComposition
+    }
+    
+    private func addAudioTrack(fromVideoAsset composition: AVMutableComposition, audioAsset: AVAsset) -> (AVMutableComposition, AVMutableAudioMix) {
+        
+        let composition = composition
+        let audioTrack = composition.addMutableTrackWithMediaType(AVMediaTypeAudio,
+                                                                  preferredTrackID: kCMPersistentTrackID_Invalid)
+        try! audioTrack.insertTimeRange(CMTimeRangeMake(kCMTimeZero, composition.duration),
+                                        ofTrack: audioAsset.tracksWithMediaType(AVMediaTypeAudio)[0],
+                                        atTime: kCMTimeZero)
+        
+        
+        let audioParameters = AVMutableAudioMixInputParameters(track: audioTrack)
+        audioParameters.setVolume(0.8, atTime: kCMTimeZero)
+        
+        let audioMix = AVMutableAudioMix()
+        audioMix.inputParameters = [audioParameters]
+        
+        return (composition, audioMix)
+    }
+    
+    
+    private func fetchFilterVideoComposition(filter: CIFilter, videoAsset: AVAsset) -> AVMutableVideoComposition {
+        return AVMutableVideoComposition(asset: videoAsset,
+                                         applyingCIFiltersWithHandler: { (request) in
+                                            
+                                            let source = request.sourceImage.imageByClampingToExtent()
+                                            filter.setValue(source, forKey: kCIInputImageKey)
+                                            let output = filter.outputImage!.imageByCroppingToRect(request.sourceImage.extent)
+                                            request.finishWithImage(output, context: nil)
+        })
+    }
     
     
 

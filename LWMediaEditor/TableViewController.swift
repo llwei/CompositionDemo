@@ -87,73 +87,7 @@ class TableViewController: UITableViewController {
         
     }
     
-    private func loadAudio() {
-        guard let audioPath = NSBundle.mainBundle().pathForResource("Sunny Jim", ofType: "mp3") else { return }
-        
-        if let audioPlayer = audioPlayer {
-            if audioPlayer.playing {
-                audioPlayer.stop()
-                print("Stop")
-            } else {
-                audioPlayer.play()
-                print("Play")
-            }
-            
-        } else {
-            let url  = NSURL(fileURLWithPath: audioPath)
-            let asset = AVAsset(URL: url)
-            audioAsset = LWAudioAsset(asset: asset, insertTimeRange: CMTimeRangeMake(kCMTimeZero, asset.duration), atTime: kCMTimeZero)
-            do {
-                let audioPlayer = try AVAudioPlayer(contentsOfURL: url)
-                self.audioPlayer = audioPlayer
-                if audioPlayer.prepareToPlay() {
-                    audioPlayer.play()
-                    print("Play")
-                }
-            } catch {
-                let nserror = error as NSError
-                print(nserror.localizedDescription)
-            }
-        }
-    }
-    
-    
-    private func compose() {
-        
-        guard let firstAsset = firstAsset, let secondAsset = secondAsset else { return }
-        audioPlayer?.stop()
-        
-        let mix = LWMediaEditor.mergeMedias(withVideos: [firstAsset, secondAsset], audioAssets: [], renderSize: CGSize(width: 480, height: 480))
-
-        if let mixComposition = mix.0 {
-            
-            let movieName = NSProcessInfo.processInfo().globallyUniqueString + ".mov"
-            let savePath = NSTemporaryDirectory().stringByAppendingString("/" + movieName)
-            moviePath = savePath
-            let url = NSURL(fileURLWithPath: savePath)
-            
-            view.userInteractionEnabled = false
-            activityMonitor.startAnimating()
-            LWMediaEditor.exportAsset(mixComposition,
-                                      outputURL: url,
-                                      outputFileType: AVFileTypeQuickTimeMovie,
-                                      videoComposition: mix.1,
-                                      audioMix: mix.2,
-                                      completionHandler: { (status, error) in
-                                        
-                                        self.view.userInteractionEnabled = true
-                                        self.activityMonitor.stopAnimating()
-                                        if status == .Completed {
-                                            let moviePlayerController = MPMoviePlayerViewController(contentURL: url)
-                                            self.presentMoviePlayerViewControllerAnimated(moviePlayerController)
-                                        } else {
-                                            print(status.rawValue)
-                                            print(error?.localizedDescription)
-                                        }
-            })
-        }
-        
-    }
+   
     
     
     // MARK: - UITable view deleagate
@@ -169,14 +103,7 @@ class TableViewController: UITableViewController {
         case 1:
             // Load video 2
             loadVideoTwo()
-            
-        case 2:
-            // Load audio
-            loadAudio()
-            
-        case 3:
-            // Compose
-            compose()
+
             
         default:
             break

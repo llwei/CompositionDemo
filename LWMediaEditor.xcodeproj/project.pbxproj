@@ -118,9 +118,7 @@
 		005DEDB71D01148C00A7F3A8 /* LWMediaEditor */ = {
 			isa = PBXGroup;
 			children = (
-				005DEDCD1D0114B500A7F3A8 /* Class */,
 				005DEDCC1D0114A800A7F3A8 /* LWVideoPlayer */,
-				0029755C1D02ABED0026E03E /* Models */,
 				005DEDB81D01148C00A7F3A8 /* AppDelegate.swift */,
 				005DEDFB1D01171800A7F3A8 /* TableViewController.swift */,
 				005DEE081D0175A000A7F3A8 /* EditorViewController.swift */,
@@ -128,6 +126,8 @@
 				005DEDBF1D01148C00A7F3A8 /* Assets.xcassets */,
 				005DEDC11D01148C00A7F3A8 /* LaunchScreen.storyboard */,
 				005DEDC41D01148C00A7F3A8 /* Info.plist */,
+				0029755C1D02ABED0026E03E /* Models */,
+				005DEDCD1D0114B500A7F3A8 /* Class */,
 				005DEDCE1D0114D100A7F3A8 /* Resources */,
 			);
 			path = LWMediaEditor;
@@ -438,7 +438,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = LWMediaEditor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.csym.LWMediaEditor;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -450,7 +450,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = LWMediaEditor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.csym.LWMediaEditor;
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import CoreImage
 
 typealias ExportCompletionHandler = ((status: AVAssetExportSessionStatus, error: NSError?) -> Void)
 
@@ -45,13 +46,14 @@ class LWMediaEditor: NSObject {
         let videoCompositionInstruction = AVMutableVideoCompositionInstruction()
         videoCompositionInstruction.timeRange = timeRange
         videoCompositionInstruction.layerInstructions = layerInstructions
-        videoCompositionInstruction.backgroundColor = UIColor.clearColor().CGColor
         
         // AVMutableVideoComposition
         let videoComposition = AVMutableVideoComposition()
         videoComposition.instructions = [videoCompositionInstruction]
         videoComposition.frameDuration = CMTimeMake(1, 30)
         videoComposition.renderSize = renderSize
+        
+        
         
         
         // ======== Audios =======
